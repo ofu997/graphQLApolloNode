@@ -12,33 +12,56 @@ app.use(cors());
 // ID scalar type denotes an identifier used internally for
 // advanced features like caching or refetching.
 const schema = gql`
-type Query {
-  users: [User!]
-  me: User
-  user(id: ID!): User
-}
-type User {
-  id: ID!
-  username: String!
-}
+  type Query {
+    users: [User!]
+    me: User
+    user(id: ID!): User
+
+    messages: [Message!]!
+    message(id: ID!): Message!
+  }
+  type User {
+    id: ID!
+    username: String!
+    world: String
+  }
+
+  type Message {
+    id: ID!
+    text: String!
+    userId: ID!
+  }
 `;
 
 let users = {
   1: {
     id: '1',
     username: 'Clark Kent',
+    world: 'Superman'
   },
   2: {
     id: '2',
     username: 'Hermione Granger',
+    world: null 
   },
 };
+
+let messages = {
+  1: {
+    id: '1',
+    text: 'Hello World',
+  },
+  2: {
+    id: '2',
+    text: 'By World',
+  },
+}
 
 // pass to context object in const server
 // const me = users[1];
 
 // resolvers are used to return data for fields
-// from the schema resolvers are agnostic according to where the data
+// from the schema. Resolvers are agnostic according to where the data
 // comes from
 
 // Once you add a new query to your schema, you are
@@ -53,19 +76,30 @@ const resolvers = {
     user: (parent, { id }) => {
       return users[id];
     }, 
-    me: () => {
+    // me: () => {
+    //   return me;
+    // },
+    me: (parent, args, { me }) => {
       return me;
+    },
+    messages: () => {
+      return Object.values(messages);
+    },
+    message: (parent, { id }) => {
+      return messages[id];
     },
   },
   // resolvers are grouped in a JavaScript object, often called a resolver map
   User: {
-    // username: () => 'Draco Malfoy',
-    // username: parent => {
-    //   return parent.username; 
-    // }
+    username: parent => {
+      return parent.username+'!'; 
+    },
     // rename parent argument
-    username: user => {
-      return user.username; 
+    // username: user => {
+    //   return user.username; 
+    // },
+    world: user => {
+      return user.world === null? 'not applicable': user.world; 
     }
     // full username
     // username: user => `${user.firstname} ${user.lastname}`,
@@ -76,8 +110,11 @@ const resolvers = {
 // and their structure
 
 const server = new ApolloServer({
-typeDefs: schema,
-resolvers,
+  typeDefs: schema,
+  resolvers,
+  context: {
+    me: users[1],
+    },
 });
 server.applyMiddleware({ app, path: '/graphql' });
 app.listen({ port: 8000 }, () => {

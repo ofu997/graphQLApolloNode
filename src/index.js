@@ -7,10 +7,40 @@ const app = express();
 
 app.use(cors());
 
+let users = {
+  1: {
+    id: '1',
+    username: 'Clark Kent',
+    world: 'Superman',
+    messageIds: [1], 
+  },
+  2: {
+    id: '2',
+    username: 'Hermione Granger',
+    world: null,
+    messageIds: [2],
+  },
+};
+
+let messages = {
+  1: {
+    id: '1',
+    text: 'Hello World',
+    userId: '1',
+  },
+  2: {
+    id: '2',
+    text: 'By World',
+    userId: '2', 
+  },
+}
+
+// A GraphQL schema is defined by its types, the relationships between the types,
+// and their structure
 // The GraphQL schema provided to the Apollo Server is all the available data for reading and writing
 // data via GraphQL. It can happen from any client who consumes the GraphQL API.
 // ID scalar type denotes an identifier used internally for
-// advanced features like caching or refetching.
+// advanced features like caching or re-fetching.
 const schema = gql`
   type Query {
     users: [User!]
@@ -24,38 +54,16 @@ const schema = gql`
     id: ID!
     username: String!
     world: String
+    messages: [Message!]
   }
 
   type Message {
     id: ID!
     text: String!
-    userId: ID!
+    user: User!
   }
 `;
 
-let users = {
-  1: {
-    id: '1',
-    username: 'Clark Kent',
-    world: 'Superman'
-  },
-  2: {
-    id: '2',
-    username: 'Hermione Granger',
-    world: null 
-  },
-};
-
-let messages = {
-  1: {
-    id: '1',
-    text: 'Hello World',
-  },
-  2: {
-    id: '2',
-    text: 'By World',
-  },
-}
 
 // pass to context object in const server
 // const me = users[1];
@@ -76,9 +84,6 @@ const resolvers = {
     user: (parent, { id }) => {
       return users[id];
     }, 
-    // me: () => {
-    //   return me;
-    // },
     me: (parent, args, { me }) => {
       return me;
     },
@@ -94,20 +99,23 @@ const resolvers = {
     username: parent => {
       return parent.username+'!'; 
     },
-    // rename parent argument
-    // username: user => {
-    //   return user.username; 
-    // },
     world: user => {
       return user.world === null? 'not applicable': user.world; 
-    }
-    // full username
-    // username: user => `${user.firstname} ${user.lastname}`,
+    },
+    messages: user => {
+      return Object.values(messages).filter(
+        message => message.userId === user.id, 
+      );
+    },
+  },
+
+  Message: {
+    user: message => {
+      return users[message.userId];
+    },
   },
 };
 
-// A GraphQL schema is defined by its types, the relationships between the types,
-// and their structure
 
 const server = new ApolloServer({
   typeDefs: schema,

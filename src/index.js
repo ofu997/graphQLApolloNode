@@ -33,6 +33,11 @@ let messages = {
     text: 'By World',
     userId: '2', 
   },
+  3: {
+    id: '3',
+    text: 'Ron is mad at you',
+    userId: '2',
+  }
 }
 
 // A GraphQL schema is defined by its types, the relationships between the types,
@@ -61,6 +66,10 @@ const schema = gql`
     id: ID!
     text: String!
     user: User!
+  }
+
+  type Mutation {
+    createMessage(text: String!): Message! 
   }
 `;
 
@@ -102,6 +111,9 @@ const resolvers = {
     world: user => {
       return user.world === null? 'not applicable': user.world; 
     },
+    // Since a user entity doesn’t have messages, but message identifiers, you can write a custom resolver
+    // for the messages of a user again. In this case, the resolver retrieves all messages from the user from
+    // the list of sample messages.
     messages: user => {
       return Object.values(messages).filter(
         message => message.userId === user.id, 
@@ -112,6 +124,16 @@ const resolvers = {
   Message: {
     user: message => {
       return users[message.userId];
+    },
+  },
+
+  Mutation: {
+    createMessage: (parent, { text }, { me }) => {
+      const message = {
+        text,
+        userId: me.id,
+      };
+      return message;
     },
   },
 };

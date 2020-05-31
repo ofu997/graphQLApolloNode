@@ -3,6 +3,8 @@ import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
 
+var uuid = require('uuid-v4'); 
+
 const app = express();
 
 app.use(cors());
@@ -129,10 +131,16 @@ const resolvers = {
 
   Mutation: {
     createMessage: (parent, { text }, { me }) => {
+      const id = uuid(); 
       const message = {
+        id, 
         text,
         userId: me.id,
       };
+
+      messages[id] = message;
+      users[me.id].messageIds.push(id); 
+      
       return message;
     },
   },

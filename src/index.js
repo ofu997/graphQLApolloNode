@@ -2,6 +2,9 @@ import { ApolloServer, gql } from 'apollo-server-express';
 import cors from 'cors';
 import 'dotenv/config';
 import express from 'express';
+import models from './models';
+import resolvers from './resolvers';
+import schema from './schema';
 
 var uuid = require('uuid-v4'); 
 
@@ -9,38 +12,7 @@ const app = express();
 
 app.use(cors());
 
-let users = {
-  1: {
-    id: '1',
-    username: 'Clark Kent',
-    world: 'Superman',
-    messageIds: [1], 
-  },
-  2: {
-    id: '2',
-    username: 'Hermione Granger',
-    world: null,
-    messageIds: [2],
-  },
-};
 
-let messages = {
-  1: {
-    id: '1',
-    text: 'Hello World',
-    userId: '1',
-  },
-  2: {
-    id: '2',
-    text: 'By World',
-    userId: '2', 
-  },
-  3: {
-    id: '3',
-    text: 'Ron is mad at you',
-    userId: '2',
-  }
-}
 
 // A GraphQL schema is defined by its types, the relationships between the types,
 // and their structure
@@ -160,7 +132,8 @@ const server = new ApolloServer({
   typeDefs: schema,
   resolvers,
   context: {
-    me: users[1],
+    models, 
+    me: models.users[1],
     },
 });
 server.applyMiddleware({ app, path: '/graphql' });
